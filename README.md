@@ -4,38 +4,38 @@ Prometheus Exporter allows you to aggregate custom metrics from multiple process
 
 To learn more see [Instrumenting Rails with Prometheus](https://samsaffron.com/archive/2018/02/02/instrumenting-rails-with-prometheus) (it has pretty pictures!)
 
-* [Requirements](#requirements)
-* [Migrating from v0.x](#migrating-from-v0x)
-* [Installation](#installation)
-* [Usage](#usage)
-  * [Single process mode](#single-process-mode)
-    * [Custom quantiles and buckets](#custom-quantiles-and-buckets)
-  * [Multi process mode](#multi-process-mode)
-  * [Rails integration](#rails-integration)
-    * [Per-process stats](#per-process-stats)
-    * [Sidekiq metrics](#sidekiq-metrics)
-    * [Shoryuken metrics](#shoryuken-metrics)
-    * [ActiveRecord Connection Pool Metrics](#activerecord-connection-pool-metrics)
-    * [Delayed Job plugin](#delayed-job-plugin)
-    * [Hutch metrics](#hutch-message-processing-tracer)
-  * [Puma metrics](#puma-metrics)
-  * [Unicorn metrics](#unicorn-process-metrics)
-  * [Resque metrics](#resque-metrics)
-  * [Custom type collectors](#custom-type-collectors)
-  * [Multi process mode with custom collector](#multi-process-mode-with-custom-collector)
-  * [GraphQL support](#graphql-support)
-  * [Metrics default prefix / labels](#metrics-default-prefix--labels)
-  * [Client default labels](#client-default-labels)
-  * [Client default host](#client-default-host)
-  * [Histogram mode](#histogram-mode)
-  * [Histogram - custom buckets](#histogram-custom-buckets)
-* [Transport concerns](#transport-concerns)
-* [JSON generation and parsing](#json-generation-and-parsing)
-* [Logging](#logging)
-* [Docker Usage](#docker-usage)
-* [Contributing](#contributing)
-* [License](#license)
-* [Code of Conduct](#code-of-conduct)
+- [Requirements](#requirements)
+- [Migrating from v0.x](#migrating-from-v0x)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Single process mode](#single-process-mode)
+    - [Custom quantiles and buckets](#custom-quantiles-and-buckets)
+  - [Multi process mode](#multi-process-mode)
+  - [Rails integration](#rails-integration)
+    - [Per-process stats](#per-process-stats)
+    - [Sidekiq metrics](#sidekiq-metrics)
+    - [Shoryuken metrics](#shoryuken-metrics)
+    - [ActiveRecord Connection Pool Metrics](#activerecord-connection-pool-metrics)
+    - [Delayed Job plugin](#delayed-job-plugin)
+    - [Hutch metrics](#hutch-message-processing-tracer)
+  - [Puma metrics](#puma-metrics)
+  - [Unicorn metrics](#unicorn-process-metrics)
+  - [Resque metrics](#resque-metrics)
+  - [Custom type collectors](#custom-type-collectors)
+  - [Multi process mode with custom collector](#multi-process-mode-with-custom-collector)
+  - [GraphQL support](#graphql-support)
+  - [Metrics default prefix / labels](#metrics-default-prefix--labels)
+  - [Client default labels](#client-default-labels)
+  - [Client default host](#client-default-host)
+  - [Histogram mode](#histogram-mode)
+  - [Histogram - custom buckets](#histogram-custom-buckets)
+- [Transport concerns](#transport-concerns)
+- [JSON generation and parsing](#json-generation-and-parsing)
+- [Logging](#logging)
+- [Docker Usage](#docker-usage)
+- [Contributing](#contributing)
+- [License](#license)
+- [Code of Conduct](#code-of-conduct)
 
 ## Requirements
 
@@ -213,7 +213,7 @@ Rails.application.middleware.unshift PrometheusExporter::Middleware, instrument:
 #### Metrics collected by Rails integration middleware
 
 | Type    | Name                                   | Description                                                 |
-| ---     | ---                                    | ---                                                         |
+| ------- | -------------------------------------- | ----------------------------------------------------------- |
 | Counter | `http_requests_total`                  | Total HTTP requests from web app                            |
 | Summary | `http_request_duration_seconds`        | Time spent in HTTP reqs in seconds                          |
 | Summary | `http_request_redis_duration_seconds`¹ | Time spent in HTTP reqs in Redis, in seconds                |
@@ -224,6 +224,7 @@ All metrics have a `controller` and an `action` label.
 `http_requests_total` additionally has a (HTTP response) `status` label.
 
 To add your own labels to the default metrics, create a subclass of `PrometheusExporter::Middleware`, override `custom_labels`, and use it in your initializer.
+
 ```ruby
 class MyMiddleware < PrometheusExporter::Middleware
   def custom_labels(env)
@@ -240,6 +241,7 @@ end
 
 If you're not using Rails like framework, you can extend `PrometheusExporter::Middleware#default_labels` in a way to add more relevant labels.
 For example you can mimic [prometheus-client](https://github.com/prometheus/client_ruby) labels with code like this:
+
 ```ruby
 class MyMiddleware < PrometheusExporter::Middleware
   def default_labels(env, result)
@@ -259,7 +261,9 @@ class MyMiddleware < PrometheusExporter::Middleware
   end
 end
 ```
+
 That way you won't have all metrics labeled with `controller=other` and `action=other`, but have labels such as
+
 ```
 ruby_http_request_duration_seconds{path="/api/v1/teams/:id",method="GET",status="200",quantile="0.99"} 0.009880661998977303
 ```
@@ -275,6 +279,7 @@ This collects activerecord connection pool metrics.
 It supports injection of custom labels and the connection config options (`username`, `database`, `host`, `port`) as labels.
 
 For Puma single mode
+
 ```ruby
 #in puma.rb
 require 'prometheus_exporter/instrumentation'
@@ -310,6 +315,7 @@ end
 ```
 
 For Sidekiq
+
 ```ruby
 Sidekiq.configure_server do |config|
   config.on :startup do
@@ -324,14 +330,14 @@ end
 
 ##### Metrics collected by ActiveRecord Instrumentation
 
-| Type  | Name                                        | Description                           |
-| ---   | ---                                         | ---                                   |
-| Gauge | `active_record_connection_pool_connections` | Total connections in pool             |
-| Gauge | `active_record_connection_pool_busy`        | Connections in use in pool            |
-| Gauge | `active_record_connection_pool_dead`        | Dead connections in pool              |
-| Gauge | `active_record_connection_pool_idle`        | Idle connections in pool              |
-| Gauge | `active_record_connection_pool_waiting`     | Connection requests waiting           |
-| Gauge | `active_record_connection_pool_size`        | Maximum allowed connection pool size  |
+| Type  | Name                                        | Description                          |
+| ----- | ------------------------------------------- | ------------------------------------ |
+| Gauge | `active_record_connection_pool_connections` | Total connections in pool            |
+| Gauge | `active_record_connection_pool_busy`        | Connections in use in pool           |
+| Gauge | `active_record_connection_pool_dead`        | Dead connections in pool             |
+| Gauge | `active_record_connection_pool_idle`        | Idle connections in pool             |
+| Gauge | `active_record_connection_pool_waiting`     | Connection requests waiting          |
+| Gauge | `active_record_connection_pool_size`        | Maximum allowed connection pool size |
 
 All metrics collected by the ActiveRecord integration include at least the following labels: `pid` (of the process the stats where collected in), `pool_name`, any labels included in the `config_labels` option (prefixed with `dbconfig_`, example: `dbconfig_host`), and all custom labels provided with the `custom_labels` option.
 
@@ -359,19 +365,19 @@ end
 ##### Metrics collected by Process Instrumentation
 
 | Type    | Name                      | Description                                  |
-| ---     | ---                       | ---                                          |
+| ------- | ------------------------- | -------------------------------------------- |
 | Gauge   | `heap_free_slots`         | Free ruby heap slots                         |
 | Gauge   | `heap_live_slots`         | Used ruby heap slots                         |
-| Gauge   | `v8_heap_size`*           | Total JavaScript V8 heap size (bytes)        |
-| Gauge   | `v8_used_heap_size`*      | Total used JavaScript V8 heap size (bytes)   |
-| Gauge   | `v8_physical_size`*       | Physical size consumed by V8 heaps           |
-| Gauge   | `v8_heap_count`*          | Number of V8 contexts running                |
+| Gauge   | `v8_heap_size`\*          | Total JavaScript V8 heap size (bytes)        |
+| Gauge   | `v8_used_heap_size`\*     | Total used JavaScript V8 heap size (bytes)   |
+| Gauge   | `v8_physical_size`\*      | Physical size consumed by V8 heaps           |
+| Gauge   | `v8_heap_count`\*         | Number of V8 contexts running                |
 | Gauge   | `rss`                     | Total RSS used by process                    |
 | Counter | `major_gc_ops_total`      | Major GC operations by process               |
 | Counter | `minor_gc_ops_total`      | Minor GC operations by process               |
 | Counter | `allocated_objects_total` | Total number of allocated objects by process |
 
-_Metrics marked with * are only collected when `MiniRacer` is defined._
+_Metrics marked with \* are only collected when `MiniRacer` is defined._
 
 Metrics collected by Process instrumentation include labels `type` (as given with the `type` option), `pid` (of the process the stats where collected in), and any custom labels given to `Process.start` with the `labels` option.
 
@@ -395,11 +401,11 @@ Sidekiq.configure_server do |config|
 end
 ```
 
-* The middleware and death handler will generate job specific metrics (how many jobs ran? how many failed? how long did they take? how many are dead? how many were restarted?).
-* The [`Process`](#per-process-stats) metrics provide basic ruby metrics.
-* The `SidekiqProcess` metrics provide the concurrency and busy metrics for this process.
-* The `SidekiqQueue` metrics provides size and latency for the queues run by this process.
-* The `SidekiqStats` metrics provide general, global Sidekiq stats (size of Scheduled, Retries, Dead queues, total number of jobs, etc).
+- The middleware and death handler will generate job specific metrics (how many jobs ran? how many failed? how long did they take? how many are dead? how many were restarted?).
+- The [`Process`](#per-process-stats) metrics provide basic ruby metrics.
+- The `SidekiqProcess` metrics provide the concurrency and busy metrics for this process.
+- The `SidekiqQueue` metrics provides size and latency for the queues run by this process.
+- The `SidekiqStats` metrics provide general, global Sidekiq stats (size of Scheduled, Retries, Dead queues, total number of jobs, etc).
 
 For `SidekiqQueue`, if you run more than one process for the same queues, note that the same metrics will be exposed by all the processes, just like the `SidekiqStats` will if you run more than one process of any kind. You might want use `avg` or `max` when consuming their metrics.
 
@@ -445,49 +451,49 @@ Custom labels can be added for individual jobs by defining a class method on the
 ##### Metrics collected by Sidekiq Instrumentation
 
 **PrometheusExporter::Instrumentation::Sidekiq**
-| Type    | Name                           | Description                                                                  |
-| ---     | ---                            | ---                                                                          |
-| Summary | `sidekiq_job_duration_seconds` | Time spent in sidekiq jobs                                                   |
-| Counter | `sidekiq_jobs_total`           | Total number of sidekiq jobs executed                                        |
+| Type | Name | Description |
+| --- | --- | --- |
+| Summary | `sidekiq_job_duration_seconds` | Time spent in sidekiq jobs |
+| Counter | `sidekiq_jobs_total` | Total number of sidekiq jobs executed |
 | Counter | `sidekiq_restarted_jobs_total` | Total number of sidekiq jobs that we restarted because of a sidekiq shutdown |
-| Counter | `sidekiq_failed_jobs_total`    | Total number of failed sidekiq jobs                                          |
+| Counter | `sidekiq_failed_jobs_total` | Total number of failed sidekiq jobs |
 
 All metrics have a `job_name` label and a `queue` label.
 
 **PrometheusExporter::Instrumentation::Sidekiq.death_handler**
-| Type    | Name                      | Description                       |
-| ---     | ---                       | ---                               |
+| Type | Name | Description |
+| --- | --- | --- |
 | Counter | `sidekiq_dead_jobs_total` | Total number of dead sidekiq jobs |
 
 This metric has a `job_name` label and a `queue` label.
 
 **PrometheusExporter::Instrumentation::SidekiqQueue**
-| Type  | Name                            | Description                  |
-| ---   | ---                             | ---                          |
-| Gauge | `sidekiq_queue_backlog`         | Size of the sidekiq queue    |
+| Type | Name | Description |
+| --- | --- | --- |
+| Gauge | `sidekiq_queue_backlog` | Size of the sidekiq queue |
 | Gauge | `sidekiq_queue_latency_seconds` | Latency of the sidekiq queue |
 
 Both metrics will have a `queue` label with the name of the queue.
 
 **PrometheusExporter::Instrumentation::SidekiqProcess**
-| Type  | Name                          | Description                             |
-| ---   | ---                           | ---                                     |
-| Gauge | `sidekiq_process_busy`        | Number of busy workers for this process |
-| Gauge | `sidekiq_process_concurrency` | Concurrency for this process            |
+| Type | Name | Description |
+| --- | --- | --- |
+| Gauge | `sidekiq_process_busy` | Number of busy workers for this process |
+| Gauge | `sidekiq_process_concurrency` | Concurrency for this process |
 
 Both metrics will include the labels `labels`, `queues`, `quiet`, `tag`, `hostname` and `identity`, as returned by the [Sidekiq Processes API](https://github.com/mperham/sidekiq/wiki/API#processes).
 
 **PrometheusExporter::Instrumentation::SidekiqStats**
-| Type  | Name                            | Description                             |
-| ---   | ---                             | ---                                     |
-| Gauge | `sidekiq_stats_dead_size`       | Size of the dead queue                  |
-| Gauge | `sidekiq_stats_enqueued`        | Number of enqueued jobs                 |
-| Gauge | `sidekiq_stats_failed`          | Number of failed jobs                   |
-| Gauge | `sidekiq_stats_processed`       | Total number of processed jobs          |
-| Gauge | `sidekiq_stats_processes_size`  | Number of processes                     |
-| Gauge | `sidekiq_stats_retry_size`      | Size of the retries queue               |
-| Gauge | `sidekiq_stats_scheduled_size`  | Size of the scheduled queue             |
-| Gauge | `sidekiq_stats_workers_size`    | Number of jobs actively being processed |
+| Type | Name | Description |
+| --- | --- | --- |
+| Gauge | `sidekiq_stats_dead_size` | Size of the dead queue |
+| Gauge | `sidekiq_stats_enqueued` | Number of enqueued jobs |
+| Gauge | `sidekiq_stats_failed` | Number of failed jobs |
+| Gauge | `sidekiq_stats_processed` | Total number of processed jobs |
+| Gauge | `sidekiq_stats_processes_size` | Number of processes |
+| Gauge | `sidekiq_stats_retry_size` | Size of the retries queue |
+| Gauge | `sidekiq_stats_scheduled_size` | Size of the scheduled queue |
+| Gauge | `sidekiq_stats_workers_size` | Number of jobs actively being processed |
 
 Based on the [Sidekiq Stats API](https://github.com/mperham/sidekiq/wiki/API#stats).
 
@@ -509,7 +515,7 @@ end
 ##### Metrics collected by Shoryuken Instrumentation
 
 | Type    | Name                             | Description                                                                      |
-| ---     | ---                              | ---                                                                              |
+| ------- | -------------------------------- | -------------------------------------------------------------------------------- |
 | Counter | `shoryuken_job_duration_seconds` | Total time spent in shoryuken jobs                                               |
 | Counter | `shoryuken_jobs_total`           | Total number of shoryuken jobs executed                                          |
 | Counter | `shoryuken_restarted_jobs_total` | Total number of shoryuken jobs that we restarted because of a shoryuken shutdown |
@@ -531,7 +537,7 @@ end
 ##### Metrics collected by Delayed Job Instrumentation
 
 | Type    | Name                                      | Description                                                        | Labels     |
-| ---     | ---                                       | ---                                                                | ---        |
+| ------- | ----------------------------------------- | ------------------------------------------------------------------ | ---------- |
 | Counter | `delayed_job_duration_seconds`            | Total time spent in delayed jobs                                   | `job_name` |
 | Counter | `delayed_jobs_total`                      | Total number of delayed jobs executed                              | `job_name` |
 | Gauge   | `delayed_jobs_enqueued`                   | Number of enqueued delayed jobs                                    | -          |
@@ -557,7 +563,7 @@ end
 ##### Metrics collected by Hutch Instrumentation
 
 | Type    | Name                         | Description                             |
-| ---     | ---                          | ---                                     |
+| ------- | ---------------------------- | --------------------------------------- |
 | Counter | `hutch_job_duration_seconds` | Total time spent in hutch jobs          |
 | Counter | `hutch_jobs_total`           | Total number of hutch jobs executed     |
 | Counter | `hutch_failed_jobs_total`    | Total number failed hutch jobs executed |
@@ -594,7 +600,7 @@ end
 #### Metrics collected by Puma Instrumentation
 
 | Type  | Name                        | Description                                                 |
-| ---   | ---                         | ---                                                         |
+| ----- | --------------------------- | ----------------------------------------------------------- |
 | Gauge | `puma_workers`              | Number of puma workers                                      |
 | Gauge | `puma_booted_workers`       | Number of puma workers booted                               |
 | Gauge | `puma_old_workers`          | Number of old puma workers                                  |
@@ -619,7 +625,7 @@ PrometheusExporter::Instrumentation::Resque.start
 #### Metrics collected by Resque Instrumentation
 
 | Type  | Name                    | Description                            |
-| ---   | ---                     | ---                                    |
+| ----- | ----------------------- | -------------------------------------- |
 | Gauge | `resque_processed_jobs` | Total number of processed Resque jobs  |
 | Gauge | `resque_failed_jobs`    | Total number of failed Resque jobs     |
 | Gauge | `resque_pending_jobs`   | Total number of pending Resque jobs    |
@@ -645,7 +651,7 @@ Note: You must install the `raindrops` gem in your `Gemfile` or locally.
 #### Metrics collected by Unicorn Instrumentation
 
 | Type  | Name                      | Description                                                    |
-| ---   | ---                       | ---                                                            |
+| ----- | ------------------------- | -------------------------------------------------------------- |
 | Gauge | `unicorn_workers`         | Number of unicorn workers                                      |
 | Gauge | `unicorn_active_workers`  | Number of active unicorn workers                               |
 | Gauge | `unicorn_request_backlog` | Number of requests waiting to be processed by a unicorn worker |
@@ -844,6 +850,7 @@ Usage: prometheus_exporter [options]
 #### Example
 
 The following will run the process at
+
 - Port `8080` (default `9394`)
 - Bind to `0.0.0.0` (default `localhost`)
 - Timeout in `1 second` for metrics endpoint (default `2 seconds`)
@@ -858,7 +865,7 @@ prometheus_exporter -p 8080 \
                     --prefix 'foo_'
 ```
 
-You can use `-b` option to bind the `prometheus_exporter` web server to any IPv4 interface with `-b 0.0.0.0`, 
+You can use `-b` option to bind the `prometheus_exporter` web server to any IPv4 interface with `-b 0.0.0.0`,
 any IPv6 interface with `-b ::`, or `-b ANY` to any IPv4/IPv6 interfaces available on your host system.
 
 #### Enabling Basic Authentication
@@ -873,8 +880,8 @@ Additionally, the `--realm` option may be used to provide a customized realm for
 
 Notes:
 
-* You will need to create a `htpasswd` formatted file before hand which contains one or more user:password entries
-* Only the basic `crypt` encryption is currently supported
+- You will need to create a `htpasswd` formatted file before hand which contains one or more user:password entries
+- Only the basic `crypt` encryption is currently supported
 
 A simple `htpasswd` file can be created with the Apache `htpasswd` utility; e.g:
 
@@ -903,6 +910,7 @@ Will result in:
 http_requests_total{controller="home","action"="index",service="app-server-01",app_name="app-01"} 2
 http_requests_total{service="app-server-01",app_name="app-01"} 1
 ```
+
 ### Client default host
 
 By default, `PrometheusExporter::Client.default` connects to `localhost:9394`. If your setup requires this (e.g. when using `docker-compose`), you can change the default host and port by setting the environment variables `PROMETHEUS_EXPORTER_HOST` and `PROMETHEUS_EXPORTER_PORT`.
@@ -922,15 +930,18 @@ In histogram mode, the same metrics will be collected but will be reported as hi
 ### Histogram - custom buckets
 
 By default these buckets will be used:
+
 ```
 [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5.0, 10.0].freeze
 ```
+
 if this is not enough you can specify `default_buckets` like this:
+
 ```
 Histogram.default_buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 2.5, 3, 4, 5.0, 10.0, 12, 14, 15, 20, 25].freeze
 ```
 
-Specfied buckets on the instance  takes precedence over default:
+Specfied buckets on the instance takes precedence over default:
 
 ```
 Histogram.default_buckets = [0.005, 0.01, 0,5].freeze
@@ -954,12 +965,14 @@ When `PrometheusExporter::Server::Collector` parses your JSON, by default it wil
 ## Logging
 
 `PrometheusExporter::Client.default` will export to `STDERR`. To change this, you can pass your own logger:
+
 ```ruby
 PrometheusExporter::Client.new(logger: Rails.logger)
 PrometheusExporter::Client.new(logger: Logger.new(STDOUT))
 ```
 
 You can also pass a log level (default is [`Logger::WARN`](https://ruby-doc.org/stdlib-3.0.1/libdoc/logger/rdoc/Logger.html)):
+
 ```ruby
 PrometheusExporter::Client.new(log_level: Logger::DEBUG)
 ```
@@ -1000,7 +1013,17 @@ services:
       - -b
       - 0.0.0.0
     healthcheck:
-      test: ["CMD", "curl", "--silent", "--show-error", "--fail", "--max-time", "3", "http://0.0.0.0:9394/ping"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "--silent",
+          "--show-error",
+          "--fail",
+          "--max-time",
+          "3",
+          "http://0.0.0.0:9394/ping",
+        ]
       timeout: 3s
       interval: 10s
       retries: 5
